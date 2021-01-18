@@ -1,0 +1,101 @@
+Sub plot_dough(starting_row As Integer, col As Integer, second_col As Integer, place As Range, Optional ByVal limit As Integer = 0)
+
+    ActiveSheet.Shapes.AddChart2(251, xlDoughnut).Select
+    Application.CommandBars("Format Object").Visible = False
+    Dim row As Integer
+    row = starting_row
+    Dim second As Integer
+    If second_col = 0 Then
+        second = col + 1
+    Else
+        second = second_col
+    End If
+    
+    While Cells(row, col) <> ""
+
+        row = row + 1
+
+    Wend
+    If row - starting_row + 1 > limit And limit <> 0 Then row = starting_row + limit - 1
+    Dim str As String
+    row = row - 1
+    ActiveChart.SetSourceData Source:=Union(Range(Cells(starting_row, col), Cells(row, col)), Range(Cells(starting_row, second_col), Cells(row, second_col)))
+
+    ActiveChart.SetElement (msoElementLegendRight)
+    ActiveChart.ChartColor = 11
+    ActiveChart.ApplyLayout (7)
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Left = place.Left
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Top = place.Top
+    ActiveChart.Parent.Height = 180
+    ActiveChart.Parent.Width = 330
+    With ActiveChart.Legend
+        .Width = 300
+        .Left = 240
+        .Height = 130
+        .Top = 20
+    End With
+    
+
+   
+
+End Sub
+Sub plot_bar(starting_row As Integer, col As Integer, second_col As Integer, place As Range)
+    ActiveSheet.Shapes.AddChart2(251, xlBar).Select
+    Application.CommandBars("Format Object").Visible = False
+    Dim row As Integer
+    row = starting_row
+    While Cells(row, col) <> ""
+        row = row + 1
+    Wend
+    Dim str As String
+    row = row - 1
+    If second_col = 0 Then
+        ActiveChart.SetSourceData Source:=Range(Cells(starting_row, col), Cells(row, col + 1))
+    Else
+        ActiveChart.SetSourceData Source:=Union(Range(Cells(starting_row, col), Cells(row, col)), Range(Cells(starting_row, second_col), Cells(row, second_col)))
+    End If
+    With ActiveChart
+        .SetElement (msoElementLegendRight)
+        .ChartColor = 11
+        .ApplyLayout (2)
+        .HasLegend = False
+        .HasTitle = False
+        .Parent.Height = 220
+        .Parent.Width = 800
+    End With
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Left = place.Left
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Top = place.Top
+End Sub
+
+Sub transparent()
+Dim str As String
+Dim j As Integer
+
+For j = 1 To ActiveSheet.ChartObjects.Count
+    str = ActiveSheet.ChartObjects(j).Name
+    
+    ActiveSheet.Shapes(str).Fill.Visible = msoFalse
+
+Next j
+End Sub
+Sub main()
+    
+    If ActiveSheet.ChartObjects.Count <> 0 Then ActiveSheet.ChartObjects.Delete
+    
+    'plot_dough(data_starting_row, type_column, data_column, top_left_location_of_the_graph, (optional) type_number_limit)
+    Call plot_dough(32, 2, 5, Range("H19"))
+    Call plot_dough(32, 3, 5, Range("P31"))
+    Call plot_dough(99, 7, 9, Range("K98"), 10)
+    Call plot_dough(99, 8, 9, Range("K116"), 10)
+    Call plot_dough(148, 5, 7, Range("A155"))
+    Call plot_dough(148, 6, 7, Range("F155"))
+    Call plot_dough(169, 3, 4, Range("A177"))
+
+    'plot_bar(data_starting_row, type_column, data_column, top_left_location_of_the_graph
+    Call plot_bar(132, 1, 4, Range("K131"))
+    Call plot_bar(132, 2, 4, Range("K146"))
+    
+    'helper function to make background transparent
+    Call transparent
+    
+End Sub
