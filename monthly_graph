@@ -1,31 +1,251 @@
-Sub plot_dough(starting_row As Integer, col As Integer, second_col As Integer, place As Range, Optional ByVal limit As Integer = 0)
+Dim current_row, data_col As Integer
 
-    ActiveSheet.Shapes.AddChart2(251, xlDoughnut).Select
-    Application.CommandBars("Format Object").Visible = False
-    Dim row As Integer
-    row = starting_row
-    Dim second As Integer
-    If second_col = 0 Then
-        second = col + 1
-    Else
-        second = second_col
+Sub get_all()
+    If ActiveSheet.ChartObjects.count <> 0 Then ActiveSheet.ChartObjects.Delete
+    Dim path_row As Integer
+    path_row = 2
+    data_col = 11
+    current_row = Cells(Rows.count, 2).End(xlUp).row
+    current_row = current_row + 2
+    ThisWorkbook.Sheets("Main").Rows(current_row & ":" & ThisWorkbook.Sheets("Main").Rows.count).ClearContents
+    While ThisWorkbook.Sheets("Main").Cells(path_row, 2) <> "" And ThisWorkbook.Sheets("Main").Cells(path_row, 2) <> " "
+        If Dir(ThisWorkbook.Sheets("Main").Cells(path_row, 2), vbDirectory) <> "" Then
+            Call get_one(path_row)
+        Else
+            MsgBox ThisWorkbook.Sheets("Main").Cells(path_row, 2) & " doesn't exist", vbExclamation
+        End If
+
+        path_row = path_row + 1
+        
+    Wend
+End Sub
+Sub plot_all()
+    
+    If ActiveSheet.ChartObjects.count <> 0 Then ActiveSheet.ChartObjects.Delete
+    Dim path_row As Integer
+    path_row = 2
+    data_col = 10
+    current_row = Cells(Rows.count, 2).End(xlUp).row
+    current_row = current_row + 2
+    ThisWorkbook.Sheets("Main").Rows(current_row & ":" & ThisWorkbook.Sheets("Main").Rows.count).ClearContents
+    While ThisWorkbook.Sheets("Main").Cells(path_row, 2) <> "" And ThisWorkbook.Sheets("Main").Cells(path_row, 2) <> " "
+        If Dir(ThisWorkbook.Sheets("Main").Cells(path_row, 2), vbDirectory) <> "" Then
+            Call plot_one(path_row)
+        Else
+            MsgBox ThisWorkbook.Sheets("Main").Cells(path_row, 2) & " doesn't exist", vbExclamation
+        End If
+
+        path_row = path_row + 1
+        
+    Wend
+    Call transparent
+End Sub
+
+Sub get_one(path_row As Integer)
+    Dim down As Integer
+    Dim exp_col, label_col As Integer
+    
+    exp_col = data_col + ThisWorkbook.Sheets("Main").Cells(path_row, 5) - 1
+    label_col = data_col + ThisWorkbook.Sheets("Main").Cells(path_row, 4) - 1
+    
+    With ThisWorkbook.Sheets("Main").QueryTables.Add(Connection:="TEXT;" & ThisWorkbook.Sheets("Main").Cells(path_row, 2), Destination:=ThisWorkbook.Sheets("Main").Cells(current_row, data_col))
+         .TextFileParseType = xlDelimited
+         .TextFileCommaDelimiter = True
+         .Refresh
+    End With
+    If ThisWorkbook.Sheets("Main").Cells(current_row, data_col) = "" Then ThisWorkbook.Sheets("Main").Cells(current_row, data_col) = " "
+    down = Cells(Rows.count, data_col).End(xlUp).row
+    
+    
+    For i = current_row To down
+
+        If IsNumeric(ThisWorkbook.Sheets("Main").Cells(i, data_col)) Then
+            ThisWorkbook.Sheets("Main").Cells(i, data_col).NumberFormat = "@"
+            ThisWorkbook.Sheets("Main").Cells(i, data_col) = Month(CDate(ThisWorkbook.Sheets("Main").Cells(i, data_col))) & "-" & Day(CDate(ThisWorkbook.Sheets("Main").Cells(i, data_col)))
+            
+        ElseIf IsDate(ThisWorkbook.Sheets("Main").Cells(i, data_col)) Then
+            ThisWorkbook.Sheets("Main").Cells(i, data_col).NumberFormat = "@"
+            ThisWorkbook.Sheets("Main").Cells(i, data_col) = Month(ThisWorkbook.Sheets("Main").Cells(i, data_col)) & "-" & Day(ThisWorkbook.Sheets("Main").Cells(i, data_col))
+        End If
+        
+        If ThisWorkbook.Sheets("Main").Cells(i, exp_col) = 0 Or ThisWorkbook.Sheets("Main").Cells(i, exp_col) = "" Then
+            ThisWorkbook.Sheets("Main").Rows(i).Delete
+        End If
+            
+    Next
+    
+    For j = data_col To ThisWorkbook.Sheets("Main").Columns.count
+        If InStr(Cells(current_row, j), "%") Then
+            For i = current_row To down
+                Cells(i, j).NumberFormat = "0.00%"
+            Next
+        End If
+    Next
+    current_row = down + 10
+End Sub
+
+Sub plot_one(path_row As Integer)
+
+    Dim down As Integer
+    Dim exp_col, label_col As Integer
+    
+    exp_col = data_col + ThisWorkbook.Sheets("Main").Cells(path_row, 5) - 1
+    label_col = data_col + ThisWorkbook.Sheets("Main").Cells(path_row, 4) - 1
+    
+    With ThisWorkbook.Sheets("Main").QueryTables.Add(Connection:="TEXT;" & ThisWorkbook.Sheets("Main").Cells(path_row, 2), Destination:=ThisWorkbook.Sheets("Main").Cells(current_row, data_col))
+         .TextFileParseType = xlDelimited
+         .TextFileCommaDelimiter = True
+         .Refresh
+    End With
+    If ThisWorkbook.Sheets("Main").Cells(current_row, data_col) = "" Then ThisWorkbook.Sheets("Main").Cells(current_row, data_col) = " "
+    down = Cells(Rows.count, data_col).End(xlUp).row
+    Dim is_maturity As Boolean
+    For i = current_row To down
+
+        If IsNumeric(ThisWorkbook.Sheets("Main").Cells(i, data_col)) Then
+            ThisWorkbook.Sheets("Main").Cells(i, data_col).NumberFormat = "@"
+            ThisWorkbook.Sheets("Main").Cells(i, data_col) = Month(CDate(ThisWorkbook.Sheets("Main").Cells(i, data_col))) & "-" & Day(CDate(ThisWorkbook.Sheets("Main").Cells(i, data_col)))
+            
+        ElseIf IsDate(ThisWorkbook.Sheets("Main").Cells(i, data_col)) Then
+            ThisWorkbook.Sheets("Main").Cells(i, data_col).NumberFormat = "@"
+            ThisWorkbook.Sheets("Main").Cells(i, data_col) = Month(ThisWorkbook.Sheets("Main").Cells(i, data_col)) & "-" & Day(ThisWorkbook.Sheets("Main").Cells(i, data_col))
+
+        End If
+        
+        If ThisWorkbook.Sheets("Main").Cells(i, exp_col) = 0 Or ThisWorkbook.Sheets("Main").Cells(i, exp_col) = "" Then
+            ThisWorkbook.Sheets("Main").Rows(i).Delete
+        End If
+            
+    Next
+    down = Cells(Rows.count, data_col).End(xlUp).row
+    For j = data_col To ThisWorkbook.Sheets("Main").Columns.count
+        If InStr(Cells(current_row, j), "%") Then
+            For i = current_row To down
+                Cells(i, j).NumberFormat = "0.00%"
+            Next
+        End If
+    Next
+    
+    If InStr(LCase(ThisWorkbook.Sheets("main").Cells(path_row, 1)), "maturity") Then
+        For i = current_row To down
+            ThisWorkbook.Sheets("Main").Cells(i, data_col - 1) = ThisWorkbook.Sheets("Main").Cells(i, data_col).Value & " " & ThisWorkbook.Sheets("Translate").Range("C1").Value
+            ThisWorkbook.Sheets("Main").Cells(i, data_col) = ThisWorkbook.Sheets("Main").Cells(i, data_col) & " years"
+        Next
+    
+    ElseIf InStr(LCase(ThisWorkbook.Sheets("main").Cells(path_row, 2)), "sector") Then
+        For main_curr = current_row To down
+
+            For sector_curr = 1 To ThisWorkbook.Sheets("Translate").Cells(ThisWorkbook.Sheets("Translate").Columns("A").Rows.count, 1).End(xlUp).row
+
+                If LCase(ThisWorkbook.Sheets("Translate").Cells(sector_curr, 1)) = LCase(ThisWorkbook.Sheets("Main").Cells(main_curr, data_col)) Then
+
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col - 1) = ThisWorkbook.Sheets("Translate").Cells(sector_curr, 2)
+                    Exit For
+                    
+                ElseIf sector_curr = ThisWorkbook.Sheets("Translate").Cells(ThisWorkbook.Sheets("Translate").Columns("A").Rows.count, 1).End(xlUp).row Then
+                
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col - 1) = ThisWorkbook.Sheets("Main").Cells(main_curr, data_col)
+                    
+                End If
+            Next
+        Next
+    
+    ElseIf InStr(LCase(ThisWorkbook.Sheets("main").Cells(path_row, 2)), "tag") Then
+        For main_curr = current_row To down
+
+            For tag_curr = 1 To ThisWorkbook.Sheets("Tag").Cells(ThisWorkbook.Sheets("Translate").Columns("A").Rows.count, 1).End(xlUp).row
+
+                If LCase(ThisWorkbook.Sheets("Tag").Cells(tag_curr, 1)) = LCase(ThisWorkbook.Sheets("Main").Cells(main_curr, data_col)) Then
+
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col - 1) = ThisWorkbook.Sheets("Tag").Cells(tag_curr, 3)
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col) = ThisWorkbook.Sheets("Tag").Cells(tag_curr, 2)
+                    Exit For
+                    
+                ElseIf tag_curr = ThisWorkbook.Sheets("Tag").Cells(ThisWorkbook.Sheets("Tag").Columns("A").Rows.count, 1).End(xlUp).row Then
+                
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col - 1) = ThisWorkbook.Sheets("Main").Cells(main_curr, data_col)
+                    
+                End If
+            Next
+        Next
+    ElseIf InStr(LCase(ThisWorkbook.Sheets("main").Cells(path_row, 2)), "country") Then
+        For main_curr = current_row To down
+
+            For country_curr = 1 To ThisWorkbook.Sheets("Country").Cells(ThisWorkbook.Sheets("Translate").Columns("A").Rows.count, 1).End(xlUp).row
+
+                If LCase(ThisWorkbook.Sheets("Country").Cells(country_curr, 1)) = LCase(ThisWorkbook.Sheets("Main").Cells(main_curr, data_col)) Then
+
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col - 1) = ThisWorkbook.Sheets("Country").Cells(country_curr, 2)
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col + 1) = ThisWorkbook.Sheets("Country").Cells(country_curr, 3)
+                    Exit For
+                    
+                ElseIf tag_curr = ThisWorkbook.Sheets("Country").Cells(ThisWorkbook.Sheets("Country").Columns("A").Rows.count, 1).End(xlUp).row Then
+                
+                    ThisWorkbook.Sheets("Main").Cells(main_curr, data_col - 1) = ThisWorkbook.Sheets("Main").Cells(main_curr, data_col)
+                    
+                End If
+            Next
+        Next
     End If
     
-    While Cells(row, col) <> ""
+    Dim right As Integer
+    
+    right = Cells(current_row, Columns.count).End(xlToLeft).Column
+    Dim last_row As Integer
+    
+    If down - current_row + 1 > ThisWorkbook.Sheets("Main").Cells(path_row, 6) And ThisWorkbook.Sheets("Main").Cells(path_row, 6) > 0 And ThisWorkbook.Sheets("Main").Cells(path_row, 6) <> "" Then
+    
+        last_row = current_row + ThisWorkbook.Sheets("Main").Cells(path_row, 6)
+        ThisWorkbook.Worksheets("Main").Cells(last_row, label_col) = "Others"
+        
+        If ThisWorkbook.Sheets("Main").Cells(current_row + 1, data_col - 1) <> "" Then
+            Worksheets("Main").Cells(last_row, data_col - 1) = Worksheets("Translate").Range("C2")
+        End If
+        
+        Worksheets("Main").Cells(last_row, exp_col) = Application.WorksheetFunction.Sum(Range(Cells(last_row, exp_col), Cells(down, exp_col)))
+        
+    Else
+        last_row = down
+    End If
+    
+    If InStr(LCase(ThisWorkbook.Sheets("Main").Cells(path_row, 3)), "dough") <> 0 Then
+    
+        Call plot_dough(current_row + 1, label_col, exp_col, ThisWorkbook.Sheets("Main").Cells(current_row, 2), last_row)
+        If ThisWorkbook.Sheets("Main").Cells(current_row + 1, data_col - 1) <> "" Then
+            Call plot_dough(current_row + 1, data_col - 1, exp_col, ThisWorkbook.Sheets("Main").Cells(current_row, right + 1), last_row)
+        End If
+        
+    ElseIf InStr(ThisWorkbook.Sheets("Main").Cells(path_row, 3), "bar") <> 0 Then
+    
+        Call plot_bar(current_row + 1, label_col, exp_col, ThisWorkbook.Sheets("Main").Cells(current_row, 2), last_row)
+        If ThisWorkbook.Sheets("Main").Cells(current_row + 1, data_col - 1) <> "" Then
+            Call plot_bar(current_row + 1, data_col - 1, exp_col, ThisWorkbook.Sheets("Main").Cells(current_row, right + 1), last_row)
+        End If
+    End If
+    ThisWorkbook.Sheets("Main").Range(Columns(data_col - 1), Columns(right)).AutoFit
+    current_row = down + 10
 
-        row = row + 1
+End Sub
 
-    Wend
-    If row - starting_row + 1 > limit And limit <> 0 Then row = starting_row + limit - 1
+Sub plot_dough(ByVal starting_row As Integer, ByVal col As Integer, ByVal second_col As Integer, place As Range, ByVal last_row As Integer)
+        
+
+    Dim row As Integer
+    
+    For temp = current_row + 1 To last_row
+        If Worksheets("Main").Cells(temp, col) <> "" Then Worksheets("Main").Cells(temp, col) = ThisWorkbook.Sheets("Main").Cells(temp, col) & "  " & Format(Cells(temp, second_col), "0.00%")
+    Next
+    ActiveSheet.Shapes.AddChart2(251, xlDoughnut).Select
+    Application.CommandBars("Format Object").Visible = False
     Dim str As String
     row = row - 1
-    ActiveChart.SetSourceData Source:=Union(Range(Cells(starting_row, col), Cells(row, col)), Range(Cells(starting_row, second_col), Cells(row, second_col)))
-
+    ActiveChart.SetSourceData Source:=Union(Range(Cells(starting_row, col), Cells(last_row, col)), Range(Cells(starting_row, second_col), Cells(last_row, second_col))), PlotBy:=xlColumns
+    
     ActiveChart.SetElement (msoElementLegendRight)
     ActiveChart.ChartColor = 11
     ActiveChart.ApplyLayout (7)
-    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Left = place.Left
-    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Top = place.Top
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ActiveSheet.ChartObjects.count).Name).Left = place.Left
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ActiveSheet.ChartObjects.count).Name).Top = place.Top
     ActiveChart.Parent.Height = 180
     ActiveChart.Parent.Width = 330
     With ActiveChart.Legend
@@ -34,26 +254,16 @@ Sub plot_dough(starting_row As Integer, col As Integer, second_col As Integer, p
         .Height = 130
         .Top = 20
     End With
-    
-
    
-
 End Sub
-Sub plot_bar(starting_row As Integer, col As Integer, second_col As Integer, place As Range)
+
+Sub plot_bar(ByVal starting_row As Integer, ByVal col As Integer, ByVal second_col As Integer, place As Range, ByVal last_row As Integer)
+
     ActiveSheet.Shapes.AddChart2(251, xlBar).Select
     Application.CommandBars("Format Object").Visible = False
-    Dim row As Integer
-    row = starting_row
-    While Cells(row, col) <> ""
-        row = row + 1
-    Wend
-    Dim str As String
-    row = row - 1
-    If second_col = 0 Then
-        ActiveChart.SetSourceData Source:=Range(Cells(starting_row, col), Cells(row, col + 1))
-    Else
-        ActiveChart.SetSourceData Source:=Union(Range(Cells(starting_row, col), Cells(row, col)), Range(Cells(starting_row, second_col), Cells(row, second_col)))
-    End If
+
+    ActiveChart.SetSourceData Source:=Union(Range(Cells(starting_row, col), Cells(last_row, col)), Range(Cells(starting_row, second_col), Cells(last_row, second_col))), PlotBy:=xlColumns
+
     With ActiveChart
         .SetElement (msoElementLegendRight)
         .ChartColor = 11
@@ -63,39 +273,27 @@ Sub plot_bar(starting_row As Integer, col As Integer, second_col As Integer, pla
         .Parent.Height = 220
         .Parent.Width = 800
     End With
-    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Left = place.Left
-    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ChartObjects.Count).Name).Top = place.Top
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ActiveSheet.ChartObjects.count).Name).Left = place.Left
+    ActiveSheet.Shapes(ActiveSheet.ChartObjects(ActiveSheet.ChartObjects.count).Name).Top = place.Top
+    
 End Sub
 
 Sub transparent()
-Dim str As String
-Dim j As Integer
 
-For j = 1 To ActiveSheet.ChartObjects.Count
-    str = ActiveSheet.ChartObjects(j).Name
+    Dim str As String
+    Dim j As Integer
     
-    ActiveSheet.Shapes(str).Fill.Visible = msoFalse
-
-Next j
-End Sub
-Sub main()
+    For j = 1 To ThisWorkbook.Sheets("Main").ChartObjects.count
     
-    If ActiveSheet.ChartObjects.Count <> 0 Then ActiveSheet.ChartObjects.Delete
+        str = ThisWorkbook.Sheets("Main").ChartObjects(j).Name
+        
+        ThisWorkbook.Sheets("Main").Shapes(str).Fill.Visible = msoFalse
     
-    'plot_dough(data_starting_row, type_column, data_column, top_left_location_of_the_graph, (optional) type_number_limit)
-    Call plot_dough(32, 2, 5, Range("H19"))
-    Call plot_dough(32, 3, 5, Range("P31"))
-    Call plot_dough(99, 7, 9, Range("K98"), 10)
-    Call plot_dough(99, 8, 9, Range("K116"), 10)
-    Call plot_dough(148, 5, 7, Range("A155"))
-    Call plot_dough(148, 6, 7, Range("F155"))
-    Call plot_dough(169, 3, 4, Range("A177"))
-
-    'plot_bar(data_starting_row, type_column, data_column, top_left_location_of_the_graph
-    Call plot_bar(132, 1, 4, Range("K131"))
-    Call plot_bar(132, 2, 4, Range("K146"))
-    
-    'helper function to make background transparent
-    Call transparent
+    Next j
     
 End Sub
+
+Sub confirm()
+    confirmation.Show
+End Sub
+
