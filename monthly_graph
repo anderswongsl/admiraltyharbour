@@ -39,8 +39,8 @@ Sub plot_all()
         
     Wend
     Call transparent
+    
 End Sub
-
 Sub get_one(path_row As Integer)
     Dim down As Integer
     Dim exp_col, label_col As Integer
@@ -83,7 +83,6 @@ Sub get_one(path_row As Integer)
     Next
     current_row = down + 10
 End Sub
-
 Sub plot_one(path_row As Integer)
 
     Dim down As Integer
@@ -256,7 +255,6 @@ Sub plot_dough(ByVal starting_row As Integer, ByVal col As Integer, ByVal second
     End With
    
 End Sub
-
 Sub plot_bar(ByVal starting_row As Integer, ByVal col As Integer, ByVal second_col As Integer, place As Range, ByVal last_row As Integer)
 
     ActiveSheet.Shapes.AddChart2(251, xlBar).Select
@@ -296,4 +294,3 @@ End Sub
 Sub confirm()
     confirmation.Show
 End Sub
-
